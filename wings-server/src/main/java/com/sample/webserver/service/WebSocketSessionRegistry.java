@@ -15,12 +15,12 @@ public class WebSocketSessionRegistry {
     private final ConcurrentMap<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
 
     public void add(WebSocketSession session) {
-        LOGGER.info("Adding session {} to registry", session.getId());
         sessionMap.put(session.getId(), session);
+        LOGGER.info("Added session {} to registry (count = {})", session.getId(), sessionMap.size());
     }
 
     public void remove(WebSocketSession session) {
-        LOGGER.info("Removing session {} from registry", session.getId());
         sessionMap.remove(session.getId());
+        LOGGER.info("Removed session {} from registry (count = {})", session.getId(), sessionMap.size());
     }
 }

@@ -5,7 +5,7 @@ let wsState = $state('not connected')
 let wsSessionId = $state(null)
 
 onMount(() => {
-    const socket = new WebSocket('ws://localhost:8081/websocket');
+    const socket = new WebSocket(`ws://${location.host}/websocket`);
 
     socket.addEventListener('open', event => {
 		console.log('websocket opened')
