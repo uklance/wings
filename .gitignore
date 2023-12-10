@@ -2,3 +2,4 @@
 /wings-client/.svelte-kit
 /wings-client/node_modules
 /.idea
+/.vscode

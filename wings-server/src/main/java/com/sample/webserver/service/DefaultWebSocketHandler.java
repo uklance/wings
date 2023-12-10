@@ -24,6 +24,6 @@ public class DefaultWebSocketHandler implements WebSocketHandler {
             sessionRegistry.remove(session);
             return null;
         });
-        return Mono.zip(sendMono, closeMono).map(tuple -> null);
+        return sendMono.and(closeMono);
     }
 }
