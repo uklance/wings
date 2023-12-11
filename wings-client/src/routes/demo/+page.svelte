@@ -11,11 +11,13 @@ onMount(() => {
     socket.addEventListener('open', event => {
 		console.log('websocket opened')
         wsState = 'open'
+        wsSessionId = null
     });
 
     socket.addEventListener('close', event => {
 		console.log('websocket closed')
         wsState = 'closed'
+        wsSessionId = null
     });
 
     socket.addEventListener('message', event => {
