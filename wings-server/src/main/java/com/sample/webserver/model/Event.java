@@ -1,5 +1,6 @@
 package com.sample.webserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
@@ -9,21 +10,22 @@ import java.util.Set;
 
 @ToString
 @EqualsAndHashCode
+@JsonIncludeProperties({"headers", "payload"})
 public class Event {
-    private Map<String, Object> headers;
+    private Map<String, String> headers;
     private Object payload;
 
-    public void init(Map<String, Object> headers, Object payload) {
+    public void init(Map<String, String> headers, Object payload) {
         this.headers = headers;
         this.payload = payload;
     }
 
-    public <T> T getHeader(String name, Class<T> type) {
-        return type.cast(headers.get(name));
+    public String getHeader(String name) {
+        return headers.get(name);
     }
 
-    public String getStringHeader(String name) {
-        return (String) headers.get(name);
+    public String getEventType() {
+        return getHeader(EventHeader.EVENT_TYPE);
     }
 
     public Set<String> getHeaderNames() {
@@ -37,5 +39,13 @@ public class Event {
     public void clear() {
         this.headers = null;
         this.payload = null;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public Object getPayload() {
+        return payload;
     }
 }

@@ -1,5 +1,12 @@
 disruptor:
-  bufferSize: 1024
   start: true
+  bufferSize: 1024
 
 server.port: 8081
+
+eventFilePoller:
+  start: true
+  dir: event-file-poller
+  periodMillis: 2000
+
+

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketSession;
 
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -22,5 +23,13 @@ public class WebSocketSessionRegistry {
     public void remove(WebSocketSession session) {
         sessionMap.remove(session.getId());
         LOGGER.info("Removed session {} from registry (count = {})", session.getId(), sessionMap.size());
+    }
+
+    public WebSocketSession get(String sessionId) {
+        return sessionMap.get(sessionId);
+    }
+
+    public Collection<WebSocketSession> getAll() {
+        return sessionMap.values();
     }
 }

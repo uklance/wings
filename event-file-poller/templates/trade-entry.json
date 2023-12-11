@@ -1,0 +1,8 @@
+{
+  "headers": {
+    "eventType": "Trade:entry"
+  },
+  "payload": {
+    "tradeId": 12345
+  }
+}

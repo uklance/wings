@@ -1,0 +1,10 @@
+{
+  "headers": {
+    "eventType": "Trade:snapshot"
+  },
+  "payload": [
+    { "tradeId": 11111 },
+    { "tradeId": 22222 },
+    { "tradeId": 33333 }
+  ]
+}
