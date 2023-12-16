@@ -17,6 +17,7 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
+import org.springframework.web.reactive.socket.WebSocketHandler;
 
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -48,10 +49,8 @@ public class WebServerConfiguration {
 
     @Bean
     public HandlerMapping webSocketHandlerMapping(DefaultWebSocketHandler handler) {
-        SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
-        handlerMapping.setOrder(1);
-        handlerMapping.setUrlMap(Map.of("/websocket", handler));
-        return handlerMapping;
+        Map<String, WebSocketHandler> handlerMap = Map.of("/websocket", handler);
+        return new SimpleUrlHandlerMapping(handlerMap, 1);
     }
 
     @Bean
@@ -76,13 +75,13 @@ public class WebServerConfiguration {
     @Bean
     public ApplicationListener<ContextClosedEvent> closeListener(Disruptor<Event> disruptor, EventFilePoller filePoller) {
         return (ContextClosedEvent event) -> {
-            if (disruptor.hasStarted()) {
-                LOGGER.info("Shutting down the disruptor");
-                disruptor.shutdown();
-            }
             if (filePoller.isRunning()) {
                 LOGGER.info("Stopping the file poller");
                 filePoller.stop();
+            }
+            if (disruptor.hasStarted()) {
+                LOGGER.info("Shutting down the disruptor");
+                disruptor.shutdown();
             }
         };
     }

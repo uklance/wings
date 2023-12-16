@@ -1,35 +1,12 @@
-<script>
+<script lang="ts">
 import { onMount } from 'svelte'
+import { websocketConnect, apiState } from '$lib/api.svelte'
 
 let wsState = $state('not connected')
 let wsSessionId = $state(null)
-let messages = $state([])
+let messages:String[] = $state([])
 
-onMount(() => {
-    const socket = new WebSocket(`ws://${location.host}/websocket`);
-
-    socket.addEventListener('open', event => {
-		console.log('websocket opened')
-        wsState = 'open'
-        wsSessionId = null
-    });
-
-    socket.addEventListener('close', event => {
-		console.log('websocket closed')
-        wsState = 'closed'
-        wsSessionId = null
-    });
-
-    socket.addEventListener('message', event => {
-        let message = JSON.parse(event.data)
-        if (message.headers.eventType == 'Websocket:init') {
-		    wsSessionId = message.payload.sessionId
-        } else {
-            messages.push(event.data)
-            messages = messages
-        }
-    });
-})
+onMount(() => websocketConnect())
 </script>
 
 <svelte:head>
@@ -38,10 +15,6 @@ onMount(() => {
 </svelte:head>
 
 <div class="text-column">
-	<p>WebSocket state: {wsState}</p>
-	<p>WebSocket sessionId: {wsSessionId}</p>
+	<p>WebSocket state: {apiState.socketState}</p>
+	<p>WebSocket sessionId: {apiState.socketSessionId}</p>
 </div>
-
-{#each messages as message}
-    <p>{message}</p>
-{/each}
