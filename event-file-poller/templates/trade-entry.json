@@ -1,6 +1,6 @@
 {
   "headers": {
-    "eventType": "Trade:entry"
+    "topic": "Trade:entry"
   },
   "payload": {
     "tradeId": 12345

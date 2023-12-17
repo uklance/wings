@@ -50,7 +50,7 @@ export function subscribe(modelName:string, payload:any, headers?:StringMap): Su
     }
 
     let defaultHeaders:StringMap = {
-        eventType: modelName + ':subscribe',
+        topic: modelName + ':subscribe',
         correlationId: id,
         sessionId: socketSessionId!
     };
@@ -86,7 +86,7 @@ export function websocketConnect() {
     
     socket.addEventListener('message', event => {
         let message = JSON.parse(event.data)
-        if (message.headers.eventType == 'Websocket:init') {
+        if (message.headers.topic == 'Websocket:init') {
             console.log(`sessionId is ${message.payload.sessionId}`)
             socketSessionId = message.payload.sessionId
         } else {

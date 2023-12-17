@@ -24,8 +24,8 @@ public class Event {
         return headers.get(name);
     }
 
-    public String getEventType() {
-        return getHeader(EventHeader.EVENT_TYPE);
+    public String getTopic() {
+        return getHeader(EventHeader.TOPIC);
     }
 
     public Set<String> getHeaderNames() {
