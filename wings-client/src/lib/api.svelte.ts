@@ -5,7 +5,7 @@ let subscriptionsById: {[key: string]: Subscription} = {};
 let socket: WebSocket;
 
 let socketState: string = $state('not connected');
-let socketSessionId: string | null = $state('');
+let socketSessionId: string | null = $state(null);
 
 export const apiState = {
     get socketState() { return socketState },
@@ -86,13 +86,19 @@ export function websocketConnect() {
     });  
     
     socket.addEventListener('message', event => {
+        console.log(`received message event.data=${event.data}`);
         let message = JSON.parse(event.data)
         if (message.headers.topic === 'Websocket:init') {
             console.log(`sessionId is ${message.payload.sessionId}`)
             socketSessionId = message.payload.sessionId
         } else {
             let correlationId:string = message.headers.correlationId;
-            subscriptionsById[correlationId].onMessage(message);
+            let sub:Subscription = subscriptionsById[correlationId];
+            if (sub) {
+                sub.onMessage(message);
+            } else {
+                console.log(`No subscriptions for correlationId ${correlationId}`);
+            }
         }
     });    
 }

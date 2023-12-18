@@ -33,18 +33,12 @@ public class WebServerConfiguration {
             @Value("${disruptor.bufferSize}") int bufferSize,
             OutboundWebsocketEventHandler outboundWsEventHandler
     ) {
-        EventHandler<Event> eventHandler1 = (event, sequence, endOfBatch) -> {
-            LOGGER.info("eventHandler1: event={}, sequence={}, endOfBatch={}", event, sequence, endOfBatch);
-        };
-        EventHandler<Event> eventHandler2 = (event, sequence, endOfBatch) -> {
-            LOGGER.info("eventHandler2: event={}, sequence={}, endOfBatch={}", event, sequence, endOfBatch);
-        };
         EventHandler<Event> closeEventHandler = (event, sequence, endOfBatch) -> {
             LOGGER.info("closeEventHandler: event={}, sequence={}, endOfBatch={}", event, sequence, endOfBatch);
             event.clear();
         };
         Disruptor<Event> disruptor = new Disruptor<>(Event::new, bufferSize, DaemonThreadFactory.INSTANCE);
-        disruptor.handleEventsWith(eventHandler1, eventHandler2, outboundWsEventHandler).then(closeEventHandler);
+        disruptor.handleEventsWith(outboundWsEventHandler).then(closeEventHandler);
         return disruptor;
     }
 
