@@ -3,6 +3,7 @@ import type { StringMap } from './types/StringMap.js'
 let nextId: number = 0;
 let subscriptionsById: {[key: string]: Subscription} = {};
 let socket: WebSocket;
+let bufferedCommands: (() => void)[] = [];
 
 let socketState: string = $state('not connected');
 let socketSessionId: string | null = $state(null);
@@ -10,7 +11,7 @@ let socketSessionId: string | null = $state(null);
 export const apiState = {
     get socketState() { return socketState },
     get socketSessionId() { return socketSessionId }
-}
+};
 
 export type MessageListener = (message: any) => any;
 
@@ -29,7 +30,7 @@ export class Subscription {
 
     public close() {
         this.messageListeners.length = 0;
-        delete subscriptionsById[this.id]
+        delete subscriptionsById[this.id];
     }
 
     public onMessage(message: any) {
@@ -41,12 +42,19 @@ export class Subscription {
     }
 }
 
-export function subscribe(entity:string, payload:any, headers?:StringMap): Subscription {
-    if (socketSessionId == '') {
-        setTimeout
-        throw new Error('socketSessionId is null');
-    }
-    
+export function subscribe(entity:string, payload:any, headers?:StringMap): Promise<Subscription> {
+    let promise = new Promise<Subscription>((resolve, reject) => {
+        if (socketSessionId === null) {
+            console.log('Buffering subscribe command (socketSessionId is null)');
+            bufferedCommands.push(() => resolve(_subscribe(entity, payload, headers)));
+        } else {
+            resolve(_subscribe(entity, payload, headers));
+        }
+    });
+    return promise;
+}
+
+function _subscribe(entity:string, payload:any, headers?:StringMap): Subscription {
     let id: string = String(++nextId).padStart(5, '0');
 
     let defaultHeaders:StringMap = {
@@ -74,23 +82,25 @@ export function websocketConnect() {
     socket = new WebSocket(`ws://${location.host}/websocket`);
 
     socket.addEventListener('open', event => {
-        console.log('websocket opened')
-        socketState = 'open'
-        socketSessionId = null
+        console.log('websocket opened');
+        socketState = 'open';
+        socketSessionId = null;
     });
 
     socket.addEventListener('close', event => {
-        console.log('websocket closed')
-        socketState = 'closed'
-        socketSessionId = null
+        console.log('websocket closed');
+        socketState = 'closed';
+        socketSessionId = null;
     });  
     
     socket.addEventListener('message', event => {
         console.log(`received message event.data=${event.data}`);
-        let message = JSON.parse(event.data)
+        let message = JSON.parse(event.data);
         if (message.headers.topic === 'Websocket:init') {
-            console.log(`sessionId is ${message.payload.sessionId}`)
-            socketSessionId = message.payload.sessionId
+            console.log(`sessionId is ${message.payload.sessionId}`);
+            socketSessionId = message.payload.sessionId;
+            bufferedCommands.forEach(command => command());
+            bufferedCommands.length = 0;
         } else {
             let correlationId:string = message.headers.correlationId;
             let sub:Subscription = subscriptionsById[correlationId];
@@ -106,11 +116,9 @@ export function websocketConnect() {
 async function post(body:any) {
 	let opts:any = { 
         method: 'POST', 
-        headers: { 'Content-Type' : 'application/json' }
+        headers: { 'Content-Type' : 'application/json' },
+        body: JSON.stringify(body)
     };
-    if (body) {
-        opts['body'] = JSON.stringify(body)
-    }
     console.log(`sending ${JSON.stringify(opts)}`)
     const res = await fetch(`http://${location.host}/api/event`, opts);
 	if (!res.ok) {
