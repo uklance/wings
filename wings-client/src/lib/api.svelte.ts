@@ -1,12 +1,11 @@
 import type { StringMap } from './types/StringMap.js'
-import { error } from '@sveltejs/kit';
 
 let nextId: number = 0;
 let subscriptionsById: {[key: string]: Subscription} = {};
 let socket: WebSocket;
 
 let socketState: string = $state('not connected');
-let socketSessionId: string | null = $state(null);
+let socketSessionId: string | null = $state('');
 
 export const apiState = {
     get socketState() { return socketState },
@@ -16,14 +15,14 @@ export const apiState = {
 export type MessageListener = (message: any) => any;
 
 export class Subscription {
-    public modelName: string;
+    public entity: string;
     public message:any;
     public id: string;
 
     messageListeners: MessageListener[] = [];
 
-    constructor(modelName: string, message:any, id: string) {
-        this.modelName = modelName;
+    constructor(entity: string, message:any, id: string) {
+        this.entity = entity;
         this.message = message;
         this.id = id;
     }
@@ -42,17 +41,18 @@ export class Subscription {
     }
 }
 
-export function subscribe(modelName:string, payload:any, headers?:StringMap): Subscription {
-    let id: string = String(++nextId).padStart(5);
-
-    if (!socketSessionId) {
-        error(500, { message: "socketSessionId is null"})
+export function subscribe(entity:string, payload:any, headers?:StringMap): Subscription {
+    if (socketSessionId == '') {
+        setTimeout
+        throw new Error('socketSessionId is null');
     }
+    
+    let id: string = String(++nextId).padStart(5, '0');
 
     let defaultHeaders:StringMap = {
-        topic: modelName + ':subscribe',
+        topic: entity + ':subscribe',
         correlationId: id,
-        sessionId: socketSessionId!
+        sessionId: socketSessionId
     };
     let _headers:StringMap = headers ? {...headers, ...defaultHeaders} : defaultHeaders;
 
@@ -61,14 +61,15 @@ export function subscribe(modelName:string, payload:any, headers?:StringMap): Su
         payload: payload
     };
 
-    let subscription = new Subscription(modelName, message, id);
+    let subscription = new Subscription(entity, message, id);
     subscriptionsById[id] = subscription;
+    post(message);
     return subscription;
 }
 
 export function websocketConnect() {
     if (socket) {
-        error(500, { message: "Websocket already connected"})
+        throw new Error('Websocket already connected')
     }
     socket = new WebSocket(`ws://${location.host}/websocket`);
 
@@ -86,22 +87,27 @@ export function websocketConnect() {
     
     socket.addEventListener('message', event => {
         let message = JSON.parse(event.data)
-        if (message.headers.topic == 'Websocket:init') {
+        if (message.headers.topic === 'Websocket:init') {
             console.log(`sessionId is ${message.payload.sessionId}`)
             socketSessionId = message.payload.sessionId
         } else {
-            for (let id in subscriptionsById) {
-                subscriptionsById[id].onMessage(message);
-            }
-            /*
-            let correlationIds: string[] | null = message.headers.correlationIds;
-            if (!correlationIds) {
-                error(500, { message: "message.headers.correlationIds is null"})
-            }
-            correlationIds?.forEach( id => {
-                subscriptionsById[id]?.onMessage(message);
-            })*/
-
+            let correlationId:string = message.headers.correlationId;
+            subscriptionsById[correlationId].onMessage(message);
         }
-    })    
+    });    
+}
+
+async function post(body:any) {
+	let opts:any = { 
+        method: 'POST', 
+        headers: { 'Content-Type' : 'application/json' }
+    };
+    if (body) {
+        opts['body'] = JSON.stringify(body)
+    }
+    console.log(`sending ${JSON.stringify(opts)}`)
+    const res = await fetch(`http://${location.host}/api/event`, opts);
+	if (!res.ok) {
+        throw new Error(`Received status ${res.status}`);
+	}
 }

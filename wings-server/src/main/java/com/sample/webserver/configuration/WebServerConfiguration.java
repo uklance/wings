@@ -5,8 +5,9 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.sample.webserver.model.Event;
 import com.sample.webserver.service.DefaultWebSocketHandler;
+import com.sample.webserver.service.DummyEventPublisher;
 import com.sample.webserver.service.EventFilePoller;
-import com.sample.webserver.service.OutboundWebsocketEventHandler;
+import com.sample.webserver.disruptor.OutboundWebsocketEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,7 +59,10 @@ public class WebServerConfiguration {
             @Value("${disruptor.start}") boolean startDisruptor,
             Disruptor<Event> disruptor,
             @Value("${eventFilePoller.start}") boolean startFilePoller,
-            EventFilePoller filePoller
+            EventFilePoller filePoller,
+            @Value("${dummyEventPublisher.start}") boolean startDummyPublisher,
+            DummyEventPublisher dummyPublisher
+
     ) {
         return (ContextRefreshedEvent event) -> {
             if (startDisruptor) {
@@ -69,15 +73,26 @@ public class WebServerConfiguration {
                 LOGGER.info("Starting the file poller");
                 filePoller.start();
             }
+            if (startDisruptor) {
+                LOGGER.info("Starting the dummy event publisher");
+                dummyPublisher.start();
+            }
         };
     }
 
     @Bean
-    public ApplicationListener<ContextClosedEvent> closeListener(Disruptor<Event> disruptor, EventFilePoller filePoller) {
+    public ApplicationListener<ContextClosedEvent> closeListener(
+            Disruptor<Event> disruptor,
+            EventFilePoller filePoller,
+            DummyEventPublisher dummyPublisher) {
         return (ContextClosedEvent event) -> {
             if (filePoller.isRunning()) {
                 LOGGER.info("Stopping the file poller");
                 filePoller.stop();
+            }
+            if (dummyPublisher.isRunning()) {
+                LOGGER.info("Stopping the dummy event publisher");
+                dummyPublisher.stop();
             }
             if (disruptor.hasStarted()) {
                 LOGGER.info("Shutting down the disruptor");

@@ -9,4 +9,6 @@ eventFilePoller:
   dir: event-file-poller
   periodMillis: 2000
 
+dummyEventPublisher:
+  start: true
 
