@@ -95,7 +95,7 @@ public class OutboundWebsocketEventHandler implements EventHandler<Event> {
                 Event sendEvent = new Event();
                 sendEvent.init(sendHeaders, event.getPayload());
                 try {
-                    String json = objectMapper.writeValueAsString(event);
+                    String json = objectMapper.writeValueAsString(sendEvent);
                     WebSocketMessage message = session.textMessage(json);
                     sendMonos.add(session.send(Mono.just(message)));
                 } catch (JsonProcessingException e) {
