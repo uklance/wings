@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte'
 	import { websocketConnect, apiState } from '$lib/api.svelte'
 	import LiveGrid from '$lib/components/LiveGrid.svelte'
-    import { type GridOptions } from 'ag-grid-community';
+	import type { GridOptions } from 'ag-grid-community';
 
 	let wsState = $state('not connected')
 	let wsSessionId = $state(null)

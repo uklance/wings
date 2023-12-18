@@ -31,8 +31,6 @@ public abstract class AbstractSubscriptionDelegate<T> implements SubscriptionDel
             disruptor.publishEvent((outEvent, outSequence) -> outEvent.init(outHeaders, snapshot));
         } else if (Topic.EVENT_ENTRY.equals(topic.getEvent())) {
             onEntry(event);
-        } else {
-            throw new RuntimeException("Unexpected topic " + topic);
         }
     }
 

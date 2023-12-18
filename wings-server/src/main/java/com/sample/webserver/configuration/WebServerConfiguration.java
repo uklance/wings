@@ -3,6 +3,7 @@ package com.sample.webserver.configuration;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import com.sample.webserver.disruptor.SubscriptionEventHandler;
 import com.sample.webserver.model.Event;
 import com.sample.webserver.service.DefaultWebSocketHandler;
 import com.sample.webserver.service.DummyEventPublisher;
@@ -29,17 +30,8 @@ public class WebServerConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebServerConfiguration.class);
 
     @Bean
-    public Disruptor<Event> disruptor(
-            @Value("${disruptor.bufferSize}") int bufferSize,
-            OutboundWebsocketEventHandler outboundWsEventHandler
-    ) {
-        EventHandler<Event> closeEventHandler = (event, sequence, endOfBatch) -> {
-            LOGGER.info("closeEventHandler: event={}, sequence={}, endOfBatch={}", event, sequence, endOfBatch);
-            event.clear();
-        };
-        Disruptor<Event> disruptor = new Disruptor<>(Event::new, bufferSize, DaemonThreadFactory.INSTANCE);
-        disruptor.handleEventsWith(outboundWsEventHandler).then(closeEventHandler);
-        return disruptor;
+    public Disruptor<Event> disruptor(@Value("${disruptor.bufferSize}") int bufferSize) {
+        return new Disruptor<>(Event::new, bufferSize, DaemonThreadFactory.INSTANCE);
     }
 
     @Bean
@@ -55,9 +47,15 @@ public class WebServerConfiguration {
             @Value("${eventFilePoller.start}") boolean startFilePoller,
             EventFilePoller filePoller,
             @Value("${dummyEventPublisher.start}") boolean startDummyPublisher,
-            DummyEventPublisher dummyPublisher
-
+            DummyEventPublisher dummyPublisher,
+            OutboundWebsocketEventHandler outboundWsEventHandler,
+            SubscriptionEventHandler subscriptionEventHandler
     ) {
+        EventHandler<Event> closeEventHandler = (event, sequence, endOfBatch) -> {
+            LOGGER.info("closeEventHandler: event={}, sequence={}, endOfBatch={}", event, sequence, endOfBatch);
+            event.clear();
+        };
+        disruptor.handleEventsWith(outboundWsEventHandler, subscriptionEventHandler).then(closeEventHandler);
         return (ContextRefreshedEvent event) -> {
             if (startDisruptor) {
                 LOGGER.info("Starting the disruptor");
@@ -67,7 +65,7 @@ public class WebServerConfiguration {
                 LOGGER.info("Starting the file poller");
                 filePoller.start();
             }
-            if (startDisruptor) {
+            if (startDummyPublisher) {
                 LOGGER.info("Starting the dummy event publisher");
                 dummyPublisher.start();
             }
