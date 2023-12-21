@@ -13,10 +13,12 @@
     onMount(() => {
         gridApi = createGrid(gridDiv!, gridOptions);
         let messageListener: MessageListener = message => {
-            if (message.headers.topic === entity + ':entry') {
+            let topic:string = message.headers.topic;
+            let event:string = topic.substring(topic.indexOf(':') + 1)
+            if (event === 'entry') {
                 rowData = [...rowData, message.payload]
                 gridApi!.setGridOption('rowData', rowData);
-            } else if (message.headers.topic === entity + ':snapshot') {
+            } else if (event === 'snapshot') {
                 rowData = [...rowData, ...message.payload]
                 gridApi!.setGridOption('rowData', rowData);
             } else {
