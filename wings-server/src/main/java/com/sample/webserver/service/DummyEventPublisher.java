@@ -2,7 +2,7 @@ package com.sample.webserver.service;
 
 import com.lmax.disruptor.dsl.Disruptor;
 import com.sample.webserver.model.Car;
-import com.sample.webserver.model.Event;
+import com.sample.webserver.model.MutableEvent;
 import com.sample.webserver.model.EventHeader;
 import com.sample.webserver.model.House;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 @RequiredArgsConstructor
 public class DummyEventPublisher {
-    private final Disruptor<Event> disruptor;
+    private final Disruptor<MutableEvent> disruptor;
     private final ScheduledExecutorService executor;
     private ScheduledFuture<?> future;
 

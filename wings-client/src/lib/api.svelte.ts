@@ -96,9 +96,9 @@ export function websocketConnect() {
     socket.addEventListener('message', event => {
         console.log(`received message event.data=${event.data}`);
         let message = JSON.parse(event.data);
-        if (message.headers.topic === 'Websocket:init') {
-            console.log(`sessionId is ${message.payload.sessionId}`);
-            socketSessionId = message.payload.sessionId;
+        if (message.headers.topic === 'Websocket:connect') {
+            socketSessionId = message.headers.sessionId;
+            console.log(`sessionId is ${socketSessionId}`);
             bufferedCommands.forEach(command => command());
             bufferedCommands.length = 0;
         } else {

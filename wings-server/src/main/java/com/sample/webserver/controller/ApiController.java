@@ -1,8 +1,8 @@
 package com.sample.webserver.controller;
 
 import com.lmax.disruptor.dsl.Disruptor;
-import com.sample.webserver.model.Event;
-import com.sample.webserver.model.JsonNodeEvent;
+import com.sample.webserver.model.MutableEvent;
+import com.sample.webserver.model.JsonEvent;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ApiController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiController.class);
-    private final Disruptor<Event> disruptor;
+    private final Disruptor<MutableEvent> disruptor;
 
     @PostMapping(value = "/api/event", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String event(@RequestBody JsonNodeEvent jsonEvent) {
+    public String event(@RequestBody JsonEvent jsonEvent) {
         LOGGER.info("Event received " + jsonEvent);
         if (jsonEvent.getPayload() != null && !jsonEvent.getPayload().isNull()) {
             throw new IllegalStateException("TODO: support event payload " + jsonEvent.getPayload());

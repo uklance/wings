@@ -1,7 +1,7 @@
 package com.sample.webserver.service;
 
 import com.lmax.disruptor.dsl.Disruptor;
-import com.sample.webserver.model.Event;
+import com.sample.webserver.model.MutableEvent;
 import com.sample.webserver.model.EventHeader;
 import com.sample.webserver.model.Topic;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 public abstract class AbstractSubscriptionDelegate<T> implements SubscriptionDelegate {
     private final Class<T> entityType;
-    private final Disruptor<Event> disruptor;
+    private final Disruptor<MutableEvent> disruptor;
 
     @Override
     public String getEntity() {
@@ -21,7 +21,7 @@ public abstract class AbstractSubscriptionDelegate<T> implements SubscriptionDel
     }
 
     @Override
-    public void onEvent(Event event, long sequence) {
+    public void onEvent(MutableEvent event, long sequence) {
         Topic topic = event.getTopic();
         if (Topic.EVENT_SUBSCRIBE.equals(topic.getEvent())) {
             List<T> snapshot = getSnapshot(event);
@@ -34,7 +34,7 @@ public abstract class AbstractSubscriptionDelegate<T> implements SubscriptionDel
         }
     }
 
-    protected abstract List<T> getSnapshot(Event event);
+    protected abstract List<T> getSnapshot(MutableEvent event);
 
-    protected abstract void onEntry(Event event);
+    protected abstract void onEntry(MutableEvent event);
 }

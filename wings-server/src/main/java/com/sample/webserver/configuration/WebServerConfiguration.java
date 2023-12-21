@@ -4,7 +4,7 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.sample.webserver.disruptor.SubscriptionEventHandler;
-import com.sample.webserver.model.Event;
+import com.sample.webserver.model.MutableEvent;
 import com.sample.webserver.service.DefaultWebSocketHandler;
 import com.sample.webserver.service.DummyEventPublisher;
 import com.sample.webserver.service.EventFilePoller;
@@ -30,8 +30,8 @@ public class WebServerConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebServerConfiguration.class);
 
     @Bean
-    public Disruptor<Event> disruptor(@Value("${disruptor.bufferSize}") int bufferSize) {
-        return new Disruptor<>(Event::new, bufferSize, DaemonThreadFactory.INSTANCE);
+    public Disruptor<MutableEvent> disruptor(@Value("${disruptor.bufferSize}") int bufferSize) {
+        return new Disruptor<>(MutableEvent::new, bufferSize, DaemonThreadFactory.INSTANCE);
     }
 
     @Bean
@@ -43,7 +43,7 @@ public class WebServerConfiguration {
     @Bean
     public ApplicationListener<ContextRefreshedEvent> refreshListener(
             @Value("${disruptor.start}") boolean startDisruptor,
-            Disruptor<Event> disruptor,
+            Disruptor<MutableEvent> disruptor,
             @Value("${eventFilePoller.start}") boolean startFilePoller,
             EventFilePoller filePoller,
             @Value("${dummyEventPublisher.start}") boolean startDummyPublisher,
@@ -51,7 +51,7 @@ public class WebServerConfiguration {
             OutboundWebsocketEventHandler outboundWsEventHandler,
             SubscriptionEventHandler subscriptionEventHandler
     ) {
-        EventHandler<Event> closeEventHandler = (event, sequence, endOfBatch) -> {
+        EventHandler<MutableEvent> closeEventHandler = (event, sequence, endOfBatch) -> {
             LOGGER.info("closeEventHandler: event={}, sequence={}, endOfBatch={}", event, sequence, endOfBatch);
             event.clear();
         };
@@ -74,7 +74,7 @@ public class WebServerConfiguration {
 
     @Bean
     public ApplicationListener<ContextClosedEvent> closeListener(
-            Disruptor<Event> disruptor,
+            Disruptor<MutableEvent> disruptor,
             EventFilePoller filePoller,
             DummyEventPublisher dummyPublisher) {
         return (ContextClosedEvent event) -> {

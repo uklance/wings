@@ -11,12 +11,14 @@ public class Topic {
     public static String EVENT_ENTRY = "entry";
     public static String EVENT_SNAPSHOT = "snapshot";
 
-    public static final String WEBSOCKET_INIT = "Websocket:init";
+    public static final String WEBSOCKET_CONNECT = "Websocket:connect";
+    public static final String WEBSOCKET_CLOSE = "Websocket:close";
     public static final String TRADE_SUBSCRIBE = "Trade:subscribe";
     public static final String TRADE_UNSUBSCRIBE = "Trade:unsubscribe";
     public static final String TRADE_SNAPSHOT = "Trade:snapshot";
     public static final String TRADE_ENTRY = "Trade:entry";
 
+    private String topic;
     private String entity;
     private String event;
 
@@ -26,7 +28,7 @@ public class Topic {
 
         String entity = topicString.substring(0, colonIndex);
         String event = topicString.substring(colonIndex + 1);
-        return new Topic(entity, event);
+        return new Topic(topicString, entity, event);
     }
 
     public String toString() {

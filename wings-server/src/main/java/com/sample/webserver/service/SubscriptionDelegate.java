@@ -1,8 +1,8 @@
 package com.sample.webserver.service;
 
-import com.sample.webserver.model.Event;
+import com.sample.webserver.model.MutableEvent;
 
 public interface SubscriptionDelegate {
     String getEntity();
-    void onEvent(Event event, long sequence);
+    void onEvent(MutableEvent event, long sequence);
 }

@@ -11,7 +11,7 @@ import java.util.Map;
 @EqualsAndHashCode
 @JsonIncludeProperties({"headers", "payload"})
 @Getter
-public class Event {
+public class MutableEvent {
     private Map<String, String> headers;
     private Object payload;
 

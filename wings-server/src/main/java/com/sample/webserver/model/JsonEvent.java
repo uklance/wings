@@ -10,7 +10,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Getter
 @ToString
-public class JsonNodeEvent {
+public class JsonEvent {
     private Map<String, String> headers;
     private JsonNode payload;
 }

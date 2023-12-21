@@ -2,8 +2,8 @@ package com.sample.webserver.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.sample.webserver.model.Event;
-import com.sample.webserver.model.JsonNodeEvent;
+import com.sample.webserver.model.MutableEvent;
+import com.sample.webserver.model.JsonEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class EventFilePoller {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventFilePoller.class);
     private final ScheduledExecutorService executorService;
-    private final Disruptor<Event> disruptor;
+    private final Disruptor<MutableEvent> disruptor;
     private final ObjectMapper objectMapper;
     private final String dir;
     private final int periodMillis;
@@ -26,7 +26,7 @@ public class EventFilePoller {
 
     public EventFilePoller(
             ScheduledExecutorService executorService,
-            Disruptor<Event> disruptor,
+            Disruptor<MutableEvent> disruptor,
             ObjectMapper objectMapper,
             @Value("${eventFilePoller.dir}") String dir,
             @Value("${eventFilePoller.periodMillis}") int periodMillis
@@ -48,8 +48,8 @@ public class EventFilePoller {
                     for (File file : files) {
                         if (!file.isDirectory()) {
                             LOGGER.info("Processing " + file);
-                            JsonNodeEvent jsonNodeEvent = objectMapper.readValue(file, JsonNodeEvent.class);
-                            disruptor.publishEvent((event, sequence) -> event.init(jsonNodeEvent.getHeaders(), jsonNodeEvent.getPayload()));
+                            JsonEvent jsonEvent = objectMapper.readValue(file, JsonEvent.class);
+                            disruptor.publishEvent((event, sequence) -> event.init(jsonEvent.getHeaders(), jsonEvent.getPayload()));
                             if (!file.delete()) {
                                 LOGGER.warn("Could not delete " + file);
                             }
