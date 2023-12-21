@@ -13,10 +13,6 @@ public class Topic {
 
     public static final String WEBSOCKET_CONNECT = "Websocket:connect";
     public static final String WEBSOCKET_CLOSE = "Websocket:close";
-    public static final String TRADE_SUBSCRIBE = "Trade:subscribe";
-    public static final String TRADE_UNSUBSCRIBE = "Trade:unsubscribe";
-    public static final String TRADE_SNAPSHOT = "Trade:snapshot";
-    public static final String TRADE_ENTRY = "Trade:entry";
 
     private String topic;
     private String entity;
@@ -32,6 +28,6 @@ public class Topic {
     }
 
     public String toString() {
-        return entity + ":" + event;
+        return topic;
     }
 }

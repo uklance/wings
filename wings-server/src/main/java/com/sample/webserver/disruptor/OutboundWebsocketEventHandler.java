@@ -149,11 +149,18 @@ public class OutboundWebsocketEventHandler implements EventHandler<MutableEvent>
         try {
             ImmutableEvent event = new ImmutableEvent(headers, payload);
             String json = objectMapper.writeValueAsString(event);
-            WebSocketMessage message = session.textMessage(json);
-            return session.send(Mono.just(message));
+            return sendTextMessage(session, json);
         } catch (JsonProcessingException e) {
             LOGGER.error("Error sending entry", e);
             return Mono.empty();
         }
+    }
+
+    /**
+     * This method overridden for testing
+     */
+    protected Mono<Void> sendTextMessage(WebSocketSession session, String json) {
+        WebSocketMessage message = session.textMessage(json);
+        return session.send(Mono.just(message));
     }
 }
