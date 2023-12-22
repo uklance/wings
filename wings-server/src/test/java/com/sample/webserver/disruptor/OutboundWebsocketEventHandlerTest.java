@@ -49,7 +49,7 @@ public class OutboundWebsocketEventHandlerTest {
     }
 
     @Test
-    public void testSubscribe() {
+    public void testSubscription() {
         // given
         WebSocketSession sessionA = mockWebSocketSession("sessionA");
         WebSocketSession sessionB = mockWebSocketSession("sessionB");
@@ -57,26 +57,52 @@ public class OutboundWebsocketEventHandlerTest {
         // when
         sessionRegistry.add(sessionA);
         sessionRegistry.add(sessionB);
-        String corr1 = subscribe("X", sessionA.getId());
-        String corr2 = subscribe("Y", sessionA.getId());
-        String corr3 = subscribe("Z", sessionB.getId());
-        entry("X", "X1");
-        entry("X", "X2");
-        entry("Y", "Y1");
-        entry("Z", "Z1");
+
+        String corrXA = subscribe("X", sessionA.getId());
+        String corrYA = subscribe("Y", sessionA.getId());
+        String corrXB = subscribe("X", sessionB.getId());
+        String corrZB = subscribe("Z", sessionB.getId());
+
+        snapshot("X", "x-snapshot-A", sessionA.getId(), corrXA);
+        snapshot("X", "x-snapshot-B", sessionB.getId(), corrXB);
+        snapshot("Y", "y-snapshot", sessionA.getId(), corrYA);
+        snapshot("Z", "z-snapshot", sessionB.getId(), corrZB);
+
+        entry("X", "x-entry-1");
+        entry("X", "x-entry-2");
+        entry("Y", "y-entry-1");
+        entry("Z", "z-entry-1");
+
+        unsubscribe("X", sessionA.getId(), corrXA);
+
+        entry("X", "x-entry-3");
+
         awaitRingBuffer();
 
         // then
         List<JsonEvent> sessionAEvents = eventsBySessionId.get("sessionA");
         List<JsonEvent> sessionBEvents = eventsBySessionId.get("sessionB");
-        assertThat(sessionAEvents).extracting(this::getTopicAndPayload)
-                .containsExactly("X:entry:X1", "X:entry:X2", "Y:entry:Y1");
+
+        assertThat(sessionAEvents).extracting(this::getTopicAndPayload).containsExactly(
+                "X:snapshot(x-snapshot-A)",
+                "Y:snapshot(y-snapshot)",
+                "X:entry(x-entry-1)",
+                "X:entry(x-entry-2)",
+                "Y:entry(y-entry-1)"
+        );
         assertThat(sessionAEvents).extracting(this::getCorrelationId)
-                .containsExactly(corr1, corr1, corr2);
-        assertThat(sessionBEvents).extracting(this::getTopicAndPayload)
-                .containsExactly("Z:entry:Z1");
+                .containsExactly(corrXA, corrYA, corrXA, corrXA, corrYA);
+
+        assertThat(sessionBEvents).extracting(this::getTopicAndPayload).containsExactly(
+                "X:snapshot(x-snapshot-B)",
+                "Z:snapshot(z-snapshot)",
+                "X:entry(x-entry-1)",
+                "X:entry(x-entry-2)",
+                "Z:entry(z-entry-1)",
+                "X:entry(x-entry-3)"
+        );
         assertThat(sessionBEvents).extracting(this::getCorrelationId)
-                .containsExactly(corr3);
+                .containsExactly(corrXB, corrZB, corrXB, corrXB, corrZB, corrXB);
     }
 
     private void awaitRingBuffer() {
@@ -93,7 +119,7 @@ public class OutboundWebsocketEventHandlerTest {
     private String getTopicAndPayload(JsonEvent event) {
         String topic = event.getHeaders().get(TOPIC);
         String payload = event.getPayload().asText();
-        return topic + ":" + payload;
+        return topic + "(" + payload + ")";
     }
 
     private String getCorrelationId(JsonEvent event) {
@@ -117,9 +143,28 @@ public class OutboundWebsocketEventHandlerTest {
         return correlationId;
     }
 
+    private void snapshot(String entity, String payload, String sessionId, String correlationId) {
+        Map<String, String> headers = Map.of(
+                TOPIC, entity + ":snapshot",
+                SESSION_ID, sessionId,
+                CORRELATION_ID, correlationId
+        );
+        publishEvent(headers, payload);
+    }
+
+
     private void entry(String entity, Object payload) {
         Map<String, String> headers = Map.of(TOPIC, entity + ":entry");
         publishEvent(headers, payload);
+    }
+
+    private void unsubscribe(String entity, String sessionId, String correlationId) {
+        Map<String, String> headers = Map.of(
+                TOPIC, entity + ":unsubscribe",
+                SESSION_ID, sessionId,
+                CORRELATION_ID, correlationId
+        );
+        publishEvent(headers);
     }
 
     private void publishEvent(Map<String, String> headers, Object payload) {
